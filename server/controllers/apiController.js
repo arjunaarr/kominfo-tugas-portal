@@ -15,10 +15,22 @@ exports.getHello = (req, res) => {
  */
 exports.getInfo = (req, res) => {
   const info = {
-    name: process.env.APP_NAME || "Backend API",
+    name: process.env.APP_NAME || "Kominfo Intern Task Management",
     version: process.env.APP_VERSION || "1.0.0",
     serverTime: new Date().toISOString()
   };
   
   res.json(info);
+};
+
+/**
+ * GET /api/status
+ * Endpoint to check server status
+ */
+exports.getStatus = (req, res) => {
+  res.json({
+    status: 'online',
+    serverTime: new Date().toISOString(),
+    uptime: process.uptime() + ' seconds'
+  });
 };
