@@ -1,0 +1,30 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Admin User",
+      "email": "admin@example.com",
+      "password": "$2a$10$xL5tcGNIW.1GO3OmfP8WnusZNR.K7snZQ5GkeIBu9UFQqiwWl.xyC",
+      "role": "admin",
+      "universitas": "Admin University",
+      "bidang": "System Administration",
+      "photo": null,
+      "createdAt": "2025-05-12T18:17:26.592Z",
+      "updatedAt": "2025-05-12T18:17:26.592Z"
+    },
+    {
+      "id": "2",
+      "name": "Regular User",
+      "email": "user@example.com",
+      "password": "$2a$10$xL5tcGNIW.1GO3OmfP8WnusZNR.K7snZQ5GkeIBu9UFQqiwWl.xyC",
+      "role": "user",
+      "universitas": "User University",
+      "bidang": "Student Intern",
+      "photo": null,
+      "createdAt": "2025-05-12T18:17:26.592Z",
+      "updatedAt": "2025-05-12T18:17:26.592Z"
+    }
+  ],
+  "tasks": [],
+  "logins": []
+}

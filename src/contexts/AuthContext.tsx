@@ -29,7 +29,20 @@ const mockUsers: User[] = [
     bidang: 'Data',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
+  },
+  {
+    id: '3',
+    name: 'User',
+    email: 'arjuna@example.com',
+    password: 'password',
+    role: 'user',
+    photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+    universitas: 'Universitas Indonesia',
+    bidang: 'IT',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
+
 ];
 
 interface AuthContextType extends AuthState {
