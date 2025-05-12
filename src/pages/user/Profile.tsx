@@ -1,47 +1,12 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
 import Layout from '@/components/layout/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-const bidangOptions = [
-  'Teknologi Informasi',
-  'Komunikasi Publik',
-  'Statistik',
-  'Aplikasi Informatika',
-  'Informasi dan Komunikasi Publik',
-  'Pengelolaan Informasi dan Komunikasi Publik'
-];
-
-const universitasOptions = [
-  'Universitas Indonesia',
-  'Institut Teknologi Bandung',
-  'Universitas Gadjah Mada',
-  'Institut Teknologi Sepuluh Nopember',
-  'Universitas Padjadjaran',
-  'Universitas Diponegoro',
-  'Universitas Brawijaya',
-  'Universitas Airlangga',
-  'Telkom University',
-  'Universitas Bina Nusantara'
-];
+import ProfilePhoto from '@/components/profile/ProfilePhoto';
+import PersonalInfoForm from '@/components/profile/PersonalInfoForm';
+import PasswordForm from '@/components/profile/PasswordForm';
+import { bidangOptions, universitasOptions } from '@/components/profile/constants';
 
 const UserProfile: React.FC = () => {
   const { user, updateUser } = useAuth();
@@ -124,8 +89,6 @@ const UserProfile: React.FC = () => {
     
     setIsSubmitting(true);
     
-    // In a real app, you would verify the current password and update with the new one
-    // For this demo, we'll just simulate success
     try {
       toast.success('Password updated successfully');
       setFormData(prev => ({
@@ -152,183 +115,31 @@ const UserProfile: React.FC = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Photo</CardTitle>
-                <CardDescription>Update your profile picture</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center">
-                <Avatar className="h-32 w-32 mb-4">
-                  <AvatarImage src={photoPreview || undefined} />
-                  <AvatarFallback className="text-2xl">{user?.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="space-y-2 w-full">
-                  <Input
-                    id="photo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                  />
-                  <p className="text-xs text-gray-500 text-center">
-                    JPG or PNG. Maximum 5MB.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <ProfilePhoto
+              user={user}
+              photoPreview={photoPreview}
+              handlePhotoChange={handlePhotoChange}
+            />
           </div>
           
           <div className="lg:col-span-2 space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Update your personal information</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmitProfile} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                        Full Name
-                      </label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                        Email
-                      </label>
-                      <Input
-                        id="email"
-                        value={user?.email}
-                        disabled
-                        className="bg-gray-50"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        University
-                      </label>
-                      <Select 
-                        value={formData.universitas} 
-                        onValueChange={(value) => handleSelectChange('universitas', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select university" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {universitasOptions.map((univ) => (
-                            <SelectItem key={univ} value={univ}>{univ}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Department
-                      </label>
-                      <Select 
-                        value={formData.bidang} 
-                        onValueChange={(value) => handleSelectChange('bidang', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select department" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {bidangOptions.map((bidang) => (
-                            <SelectItem key={bidang} value={bidang}>{bidang}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <Button 
-                      type="submit" 
-                      className="bg-primary-600 hover:bg-primary-700"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Saving...' : 'Save Changes'}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
+            <PersonalInfoForm
+              formData={formData}
+              handleChange={handleChange}
+              handleSelectChange={handleSelectChange}
+              handleSubmit={handleSubmitProfile}
+              isSubmitting={isSubmitting}
+              universitasOptions={universitasOptions}
+              bidangOptions={bidangOptions}
+              userEmail={user?.email}
+            />
             
-            <Card>
-              <CardHeader>
-                <CardTitle>Change Password</CardTitle>
-                <CardDescription>Update your password</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmitPassword} className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
-                      Current Password
-                    </label>
-                    <Input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type="password"
-                      value={formData.currentPassword}
-                      onChange={handleChange}
-                      placeholder="••••••••"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
-                        New Password
-                      </label>
-                      <Input
-                        id="newPassword"
-                        name="newPassword"
-                        type="password"
-                        value={formData.newPassword}
-                        onChange={handleChange}
-                        placeholder="••••••••"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                        Confirm New Password
-                      </label>
-                      <Input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type="password"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        placeholder="••••••••"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <Button 
-                      type="submit" 
-                      className="bg-primary-600 hover:bg-primary-700"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Updating...' : 'Update Password'}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
+            <PasswordForm
+              formData={formData}
+              handleChange={handleChange}
+              handleSubmit={handleSubmitPassword}
+              isSubmitting={isSubmitting}
+            />
           </div>
         </div>
       </div>
