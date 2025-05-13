@@ -23,19 +23,19 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Buat folder upload jika belum ada
+// Create upload directory if it doesn't exist
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Buat folder data jika belum ada
+// Create data directory if it doesn't exist
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// Serve static files dari folder uploads
+// Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API Routes
@@ -48,14 +48,31 @@ app.use('/api/users', userRoutes);
 if (process.env.NODE_ENV === 'production') {
   console.log('Running in production mode - serving static files from dist directory');
   
+  // Check if dist directory exists relative to the server directory (one level up)
+  const distPath = path.join(__dirname, '../dist');
+  if (fs.existsSync(distPath)) {
+    console.log(`Found dist directory at: ${distPath}`);
+    console.log(`Contents of dist directory: ${fs.readdirSync(distPath)}`);
+  } else {
+    console.error(`ERROR: dist directory not found at: ${distPath}`);
+    // List parent directory contents to help debug
+    const parentDir = path.join(__dirname, '../');
+    console.log(`Contents of parent directory: ${fs.readdirSync(parentDir)}`);
+  }
+  
   // Serve any static files
   app.use(express.static(path.join(__dirname, '../dist')));
   
   // Handle React routing, return all requests to React app
-  // IMPORTANT: This should come after API routes but before error handlers
   app.get('*', (req, res) => {
     console.log('Serving React app for path:', req.path);
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
+    const indexPath = path.join(__dirname, '../dist/index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      console.error(`ERROR: index.html not found at: ${indexPath}`);
+      res.status(404).send('Build files not found. Make sure the React app is built properly.');
+    }
   });
 }
 

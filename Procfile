@@ -1,2 +1,2 @@
 
-web: cd server && npm install && NODE_ENV=production node server.js
+web: npm run build && cd server && npm install && NODE_ENV=production node server.js
