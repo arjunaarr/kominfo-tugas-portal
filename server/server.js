@@ -47,7 +47,7 @@ try {
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// API Routes - Define before static file serving
+// API Routes
 app.use('/api', apiRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
@@ -65,14 +65,36 @@ app.use('/api/*', (req, res) => {
 if (process.env.NODE_ENV === 'production') {
   console.log('Running in production mode - looking for static files');
   
-  // Check for different possible build locations
+  // Railway-specific check for build files
   const possibleDistPaths = [
     path.join(__dirname, '../dist'),                 // Standard Vite output
     path.join(__dirname, 'dist'),                    // If dist is in server folder
     path.join(__dirname, '../build'),                // Create React App output
-    path.resolve(__dirname, '../'),                  // Root directory (Railway might put files here)
+    path.resolve(__dirname, '../'),                  // Root directory
     path.resolve(__dirname)                          // Server directory itself
   ];
+  
+  // Check if this is Railway deployment
+  if (process.env.RAILWAY_SERVICE_NAME) {
+    console.log('Detected Railway deployment environment');
+    
+    // Try to find a build folder in the /app directory which is Railway's default
+    if (fs.existsSync('/app')) {
+      console.log('Found /app directory, checking contents');
+      let appDirContents = fs.readdirSync('/app');
+      console.log('/app contents:', appDirContents);
+      
+      // Check if dist or build exists in /app
+      if (appDirContents.includes('dist')) {
+        console.log('Found dist directory in /app');
+        possibleDistPaths.unshift('/app/dist');
+      }
+      if (appDirContents.includes('build')) {
+        console.log('Found build directory in /app');
+        possibleDistPaths.unshift('/app/build');
+      }
+    }
+  }
   
   let distPath = null;
   
@@ -120,9 +142,20 @@ if (process.env.NODE_ENV === 'production') {
     });
   } else {
     console.error('ERROR: Could not find any valid build directory');
+    // Provide a simple fallback when no build directory is found
     app.get('*', (req, res) => {
       if (!req.path.startsWith('/api')) {
-        res.status(404).send('Build files not found. Make sure the build directory exists.');
+        res.status(200).send(`
+          <html>
+            <head><title>Kominfo Intern Task Management</title></head>
+            <body style="font-family: system-ui, sans-serif; padding: 2rem; max-width: 600px; margin: 0 auto;">
+              <h1>Kominfo Intern Task Management</h1>
+              <p>The application is running, but build files were not found.</p>
+              <p>Please make sure the React app is built properly before deploying.</p>
+              <p><small>Server is running in ${process.env.NODE_ENV || 'development'} mode.</small></p>
+            </body>
+          </html>
+        `);
       }
     });
   }
