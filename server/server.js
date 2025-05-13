@@ -38,14 +38,25 @@ if (!fs.existsSync(dataDir)) {
 // Serve static files dari folder uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
+// API Routes
 app.use('/api', apiRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
 
-// Route untuk 404 - Halaman tidak ditemukan
-app.use((req, res, next) => {
+// Serve static files from the React app when in production
+if (process.env.NODE_ENV === 'production') {
+  // Serve any static files
+  app.use(express.static(path.join(__dirname, '../dist')));
+
+  // Handle React routing, return all requests to React app
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
+}
+
+// Route untuk 404 - Halaman tidak ditemukan (hanya untuk API routes)
+app.use('/api/*', (req, res) => {
   res.status(404).json({
     message: 'Route not found'
   });

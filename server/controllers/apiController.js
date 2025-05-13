@@ -17,7 +17,8 @@ exports.getInfo = (req, res) => {
   const info = {
     name: process.env.APP_NAME || "Kominfo Intern Task Management",
     version: process.env.APP_VERSION || "1.0.0",
-    serverTime: new Date().toISOString()
+    serverTime: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development"
   };
   
   res.json(info);
@@ -31,6 +32,8 @@ exports.getStatus = (req, res) => {
   res.json({
     status: 'online',
     serverTime: new Date().toISOString(),
-    uptime: process.uptime() + ' seconds'
+    uptime: process.uptime() + ' seconds',
+    port: process.env.PORT || 3000,
+    environment: process.env.NODE_ENV || "development"
   });
 };
