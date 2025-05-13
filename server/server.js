@@ -35,46 +35,23 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
+// Log the current directory structure to help with debugging
+console.log('Current directory:', __dirname);
+console.log('Parent directory:', path.resolve(__dirname, '..'));
+try {
+  console.log('Parent directory contents:', fs.readdirSync(path.resolve(__dirname, '..')));
+} catch (err) {
+  console.error('Cannot read parent directory:', err.message);
+}
+
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// API Routes
+// API Routes - Define before static file serving
 app.use('/api', apiRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
-
-// Serve static files from the React app in production
-if (process.env.NODE_ENV === 'production') {
-  console.log('Running in production mode - serving static files from dist directory');
-  
-  // Check if dist directory exists relative to the server directory (one level up)
-  const distPath = path.join(__dirname, '../dist');
-  if (fs.existsSync(distPath)) {
-    console.log(`Found dist directory at: ${distPath}`);
-    console.log(`Contents of dist directory: ${fs.readdirSync(distPath)}`);
-  } else {
-    console.error(`ERROR: dist directory not found at: ${distPath}`);
-    // List parent directory contents to help debug
-    const parentDir = path.join(__dirname, '../');
-    console.log(`Contents of parent directory: ${fs.readdirSync(parentDir)}`);
-  }
-  
-  // Serve any static files
-  app.use(express.static(path.join(__dirname, '../dist')));
-  
-  // Handle React routing, return all requests to React app
-  app.get('*', (req, res) => {
-    console.log('Serving React app for path:', req.path);
-    const indexPath = path.join(__dirname, '../dist/index.html');
-    if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
-    } else {
-      console.error(`ERROR: index.html not found at: ${indexPath}`);
-      res.status(404).send('Build files not found. Make sure the React app is built properly.');
-    }
-  });
-}
 
 // API-specific 404 handler (only for /api/* routes)
 app.use('/api/*', (req, res) => {
@@ -83,6 +60,73 @@ app.use('/api/*', (req, res) => {
     message: 'Route not found'
   });
 });
+
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+  console.log('Running in production mode - looking for static files');
+  
+  // Check for different possible build locations
+  const possibleDistPaths = [
+    path.join(__dirname, '../dist'),                 // Standard Vite output
+    path.join(__dirname, 'dist'),                    // If dist is in server folder
+    path.join(__dirname, '../build'),                // Create React App output
+    path.resolve(__dirname, '../'),                  // Root directory (Railway might put files here)
+    path.resolve(__dirname)                          // Server directory itself
+  ];
+  
+  let distPath = null;
+  
+  // Find the first valid dist/build directory
+  for (const potentialPath of possibleDistPaths) {
+    console.log(`Checking for static files at: ${potentialPath}`);
+    try {
+      if (fs.existsSync(potentialPath)) {
+        console.log(`Found directory at: ${potentialPath}`);
+        console.log(`Contents: ${fs.readdirSync(potentialPath).join(', ')}`);
+        
+        // Check if this directory has index.html or looks like a build directory
+        const hasIndexHtml = fs.existsSync(path.join(potentialPath, 'index.html'));
+        const hasAssets = fs.existsSync(path.join(potentialPath, 'assets')) || 
+                         fs.existsSync(path.join(potentialPath, 'static'));
+        
+        if (hasIndexHtml || hasAssets) {
+          distPath = potentialPath;
+          console.log(`Selected static files path: ${distPath}`);
+          break;
+        }
+      }
+    } catch (err) {
+      console.error(`Error checking path ${potentialPath}:`, err.message);
+    }
+  }
+  
+  if (distPath) {
+    // Serve static files from the located directory
+    console.log(`Serving static files from: ${distPath}`);
+    app.use(express.static(distPath));
+    
+    // Handle React routing by sending index.html for non-API routes
+    app.get('*', (req, res) => {
+      console.log('Serving React app for path:', req.path);
+      const indexPath = path.join(distPath, 'index.html');
+      
+      if (fs.existsSync(indexPath)) {
+        console.log(`Found index.html at: ${indexPath}`);
+        res.sendFile(indexPath);
+      } else {
+        console.error(`ERROR: index.html not found at: ${indexPath}`);
+        res.status(404).send('Build files not found. Make sure the React app is built properly.');
+      }
+    });
+  } else {
+    console.error('ERROR: Could not find any valid build directory');
+    app.get('*', (req, res) => {
+      if (!req.path.startsWith('/api')) {
+        res.status(404).send('Build files not found. Make sure the build directory exists.');
+      }
+    });
+  }
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
